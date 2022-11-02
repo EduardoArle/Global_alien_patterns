@@ -9,7 +9,7 @@ library("data.table")
 setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/27_june_2022/Thematic_fields")
 
 #list files containing the desired info
-files <- list.files(pattern = "gbifID_basisOfRecord_")
+files <- list.files(pattern = "gbifID_establishmentMeans_")
 
 #loop through them to get unique entries in the desired field
 unic <- list()
@@ -29,30 +29,30 @@ for(i in seq_along(files))
   }
   
   gbifID <- as.data.table(gbifID)
-  unic[[i]] <- unique(gbifID, by = "basisOfRecord")
+  unic[[i]] <- unique(gbifID, by = "establishmentMeans")
   
   print(paste0("table ",i," in"))
 }
 
-#concatenate all objects in the list to get unique dates
+#concatenate all objects in the list to get unique establishmentMeans info
 unic2 <- rbindlist(unic)
 
 #make unique list
-unic3 <- unique(unic2, by = "basisOfRecord")
+unic3 <- unique(unic2, by = "establishmentMeans")
 
-#create a vector transforming unique basisOfRecord info in integer to make unique basisOfRecordID
-unic3$basisOfRecordID <- as.integer(as.factor(unic3$basisOfRecord))
+#create a vector transforming establishmentMeans info in integer to make unique establishmentMeanslD
+unic3$establishmentMeansID <- as.integer(as.factor(unic3$establishmentMeans))
 
-#combinebasisOfRecord and basisOfRecordID in a data.frame
-basisOfRecord_basisOfRecordID <- data.frame(basisOfRecord = unic3$basisOfRecord, 
-                                            basisOfRecordID = unic3$basisOfRecordID)
+#combine establishmentMeans and establishmentMeansID in a data.frame
+establishmentMeans_establishmentMeansID <- data.frame(establishmentMeans = unic3$establishmentMeans, 
+                                                      establishmentMeansID = unic3$establishmentMeansID)
 
 #save look up table
 setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/27_june_2022/gbifByField")
-saveRDS(basisOfRecord_basisOfRecordID,"basisOfRecord_basisOfRecordID")
+saveRDS(establishmentMeans_establishmentMeansID,"establishmentMeans_establishmentMeansID")
 
 #create temporay directory to save parts of the job
-dir.create("/gpfs1/data/idiv_meyer/00_data/original/GBIF/27_june_2022/gbifByField/Temp_basisOfRecord")
+dir.create("/gpfs1/data/idiv_meyer/00_data/original/GBIF/27_june_2022/gbifByField/Temp_establishmentMeans")
 
 #loop through files to concatenate decimalLongitude and decimalLatitude to locationID
 for(i in seq_along(files))
@@ -85,11 +85,11 @@ for(i in seq_along(files))
     a <- gbifID[c((((j-1)*10000000)+1):(j*10000000)),]
     #a <- gbifID[c((((j-1)*10000)+1):(j*10000)),]
     b <- a[which(!is.na(a$gbifID)),] # get rid of empty rows
-    c <- merge(b, basisOfRecord_basisOfRecordID, by = "basisOfRecord")
+    c <- merge(b, establishmentMeans_establishmentMeansID, by = "establishmentMeans")
     d <- c[,-1]
     
-    setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/27_june_2022/gbifByField/Temp_basisOfRecord")
-    saveRDS(d,paste0("Temp_gbifID_basisOfRecordID_",i,"_",j))
+    setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/27_june_2022/gbifByField/Temp_establishmentMeans")
+    saveRDS(d,paste0("Temp_gbifID_establishmentMeansID_",i,"_",j))
     print(paste0(i,"_",j))
   }
 }
@@ -98,14 +98,14 @@ for(i in seq_along(files))
 
 for(i in seq_along(files))
 {
-  setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/27_june_2022/gbifByField/Temp_basisOfRecord")
+  setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/27_june_2022/gbifByField/Temp_establishmentMeans")
   
-  res <- list.files(pattern = paste0("Temp_gbifID_basisOfRecordID_",i))
+  res <- list.files(pattern = paste0("Temp_gbifID_establishmentMeansID_",i))
   res2 <- lapply(res,readRDS)
   res3 <- rbindlist(res2)
   
   #save
   setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/27_june_2022/gbifByField")
   
-  saveRDS(res3,paste0("gbifID_basisOfRecordID_",i)) #save gbifID_speciesID
+  saveRDS(res3,paste0("establishmentMeansID__",i)) #save gbifID_speciesID
 }

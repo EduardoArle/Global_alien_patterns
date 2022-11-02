@@ -48,16 +48,6 @@ head -n 2203539571 gbifID_speciesName.txt | tail -n 203539571 > gbifID_speciesNa
 
 #### Repeate the steps for all desired thematic fields
 
-#Coordinates
-cut -f1,1,138,139 ../occurrence.txt > gbifID_coordinates.txt 
-
-head -n 1000000001 gbifID_coordinates.txt > gbifID_coordinates_1.txt
-
-head -n 2000000001 gbifID_coordinates.txt | tail -n 1000000000 > gbifID_coordinates_2.txt
-
-head -n 2203539571 gbifID_coordinates.txt | tail -n 203539571 > gbifID_coordinates_3.txt
-
-
 #Date
 cut -f1,1,107,108,109 ../occurrence.txt > gbifID_date.txt
 
@@ -66,6 +56,16 @@ head -n 1000000001 gbifID_date.txt > gbifID_date_1.txt
 head -n 2000000001 gbifID_date.txt | tail -n 1000000000 > gbifID_date_2.txt
 
 head -n 2203539571 gbifID_date.txt | tail -n 203539571 > gbifID_date_3.txt
+
+
+#Coordinates
+cut -f1,1,138,139 ../occurrence.txt > gbifID_coordinates.txt 
+
+head -n 1000000001 gbifID_coordinates.txt > gbifID_coordinates_1.txt
+
+head -n 2000000001 gbifID_coordinates.txt | tail -n 1000000000 > gbifID_coordinates_2.txt
+
+head -n 2203539571 gbifID_coordinates.txt | tail -n 203539571 > gbifID_coordinates_3.txt
 
 
 #Basis of record
@@ -88,14 +88,51 @@ head -n 2000000001 gbifID_establishmentMeans.txt | tail -n 1000000000 > gbifID_e
 head -n 2203539571 gbifID_establishmentMeans.txt | tail -n 203539571 > gbifID_establishmentMeans_3.txt
 
 
+#Occurrence status
+cut -f1,1,84 ../occurrence.txt > gbifID_occurrenceStatus.txt
 
-cut -f1,1,44,45,46 ../occurrence.txt | head
+head -n 1000000001 gbifID_occurrenceStatus.txt > gbifID_occurrenceStatus_1.txt
 
-#date
-cut -f1,1,107,108,109 ../occurrence.txt | head
+head -n 2000000001 gbifID_occurrenceStatus.txt | tail -n 1000000000 > gbifID_occurrenceStatus_2.txt
+
+head -n 2203539571 gbifID_occurrenceStatus.txt | tail -n 203539571 > gbifID_occurrenceStatus_3.txt
+
+
+#Occurrence status
+cut -f1,1,84 ../occurrence.txt > gbifID_occurrenceStatus.txt
+
+head -n 1000000001 gbifID_occurrenceStatus.txt > gbifID_occurrenceStatus_1.txt
+
+head -n 2000000001 gbifID_occurrenceStatus.txt | tail -n 1000000000 > gbifID_occurrenceStatus_2.txt
+
+head -n 2203539571 gbifID_occurrenceStatus.txt | tail -n 203539571 > gbifID_occurrenceStatus_3.txt
+
+
+#Dataset ID
+cut -f1,1,59 ../occurrence.txt > gbifID_datasetID.txt
+
+head -n 1000000001 gbifID_datasetID.txt > gbifID_datasetID_1.txt
+
+head -n 2000000001 gbifID_datasetID.txt | tail -n 1000000000 > gbifID_datasetID_2.txt
+
+head -n 2203539571 gbifID_datasetID.txt | tail -n 203539571 > gbifID_datasetID_3.txt
+
+
+
+#####
+
+
+cut -f1,1,40,107,108,109 ../occurrence.txt | head
+
+cut -f1,1,181,182,183  ../occurrence.txt | head
+
+
+
+###### dataset ID col 59
 
 
 modified (col 40) could be the date of entry...
+lastInterpreted ?
 
 datasetID 
 occurrenceStatus
@@ -110,126 +147,4 @@ RUN INDIVIDUAL SCRIPTS ON THE CLUSTER BY SUBMITTING JOBS
 Save scripts in "Scripts_to_run_jobs" folder in the cluster to request the jobs. Each R script needs a corresponding bash script to submit the job.
 
 
-
-
-#######################################
-
-
-
-Example:
-
-```{r}
-library("data.table")
-
-setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/27_june_2022/Thematic_fields")
-
-sps_name <- read.csv("species_name.txt",sep="\t")
-speciesID <- as.integer(sps_name$species)
-
-speciesName_speciesID <- data.frame(speciesName=as.character(sps_name$species),speciesID=as.numeric(speciesID))
-speciesName_speciesID <- unique(speciesName_speciesID)
-
-gbifID_speciesID <- data.frame(gbifID=sps_name$gbifID,speciesID=speciesID) #table relating GBIF and species IDs
-
-setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/31_jan_2020/gbifByField")
-
-#save files
-write.csv(speciesName_speciesID,"speciesName_speciesID.csv",row.names=F)
-write.csv(gbifID_speciesID,"gbifID_speciesID.csv",row.names=F)
-
-```
-
-
-6 – Create a file relating gbif IDs to unique combinations of lon and lat IDs and another one with lon, lat and the combination IDs
-The script is saved in the jobs folder as longLat_locID_gbifID
-
-```{r}
-setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/31_jan_2020/Thematic_fields")
-
-coords <- read.csv("coordinates.txt",sep="\t")
-coord_comb <- paste0(coords$decimalLongitude,"_",coords$decimalLatitude)
-
-locID <- as.integer(as.factor(coord_comb))
-
-lonLat_locID <- data.frame(decimalLongitude=coords$decimalLongitude,decimalLatitude=coords$decimalLatitude,locID=locID)
-
-lonLat_locID <- unique(lonLat_locID)
-
-gbifID_locID <- data.frame(gbifID=coords$gbifID,locID=locID) #table relating GBIF and loc IDs
-
-setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/31_jan_2020/gbifByField")
-
-#save files
-write.csv(lonLat_locID,"lonLat_locID.csv",row.names=F)
-write.csv(gbifID_locID,"gbifID_locID.csv",row.names=F)
-```
-
-7 – Create a file relating gbif IDs to unique combinations of year, month and day IDs and another one with year, month, day and the combination IDs
-The script is saved in the jobs folder as date_dateID_gbifID
-
-```{r}
-setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/31_jan_2020/Thematic_fields")
-
-date <- read.csv("date.txt",sep="\t")
-date_comb <- paste0(date$year,"_",date$month,"_",date$day)
-
-dateID <- as.integer(as.factor(date_comb))
-
-yearMonthDay_dateID <- data.frame(year=date$year,month=date$month,day=date$day,dateID=dateID)
-
-yearMonthDay_dateID <- unique(yearMonthDay_dateID)
-
-gbifID_dateID <- data.frame(gbifID=date$gbifID,dateID=dateID) #table relating GBIF and loc IDs
-
-setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/31_jan_2020/gbifByField")
-
-#save files
-write.csv(yearMonthDay_dateID,"yearMonthDay_dateID.csv",row.names=F)
-write.csv(gbifID_dateID,"gbifID_dateID.csv",row.names=F)
-```
-
-
-
-
-#######  trying to do everything in bash
-
-
-```{bash}
-
-# make a file with only the names of species I need
-
-
-
-
-grep 'Cathartes aura' test.txt > Cathartes_aura.txt
-
-egrep -w 'Cathartes aura|Branta canadensis|Tachycineta bicolor' test.txt > Species.txt
-
-
-cut -f1,230,134,133 Species.txt > Species_2.txt
-
-cat Species_2.txt | head
-
-
-setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/31_jan_2020/Thematic_fields")
-
-a <- read.csv("head.txt",sep="\t")
-
-setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/26_april_2020")
-
-b <- read.csv("occurrence.txt",sep="\t",nrow=1000)
-
-setwd("/gpfs1/data/idiv_meyer/00_data/original/GBIF/26_april_2020/Thematic_fields")
-
-sps <- read.csv("gbifID_speciesName.txt",sep="\t",nrow=10)
-
-coords <- read.csv("gbifID_coordinates.txt",sep="\t",nrow=10)
-
-date <- read.csv("gbifID_date.txt",sep="\t",nrow=10)
-
-class <- read.csv("gbifID_class.txt",sep="\t",nrow=10)
-
-kingdom <- read.csv("gbifID_kingdom.txt",sep="\t",nrow=10)
-
-```
 
