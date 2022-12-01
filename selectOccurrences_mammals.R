@@ -2,7 +2,7 @@
 # from the relational database in the cluster
 
 wd_list <- "/gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/Mammals"
-wd.out <- "/gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/Mammals"
+wd_out <- "/gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/Mammals"
 
 setwd(wd_list)
 list <- read.csv("Final_checklist_mammals_ubiquitous_sps.csv")
@@ -11,7 +11,7 @@ list <- read.csv("Final_checklist_mammals_ubiquitous_sps.csv")
 
 sps_list <- unique(list$gbifDarwinCore)
 
-selectRecords <- function(list,sel.by="species",fields=NULL,original.data=TRUE,
+selectRecords <- function(list,sel.by="species",fields=NULL,original.data=TRUE,external.fields=NULL,
                           wd.data="/gpfs1/data/idiv_meyer/00_data/original/GBIF/27_june_2022",wd.out,
                           file="Selected_GBIF_occurrences",verbose=TRUE){
   if(verbose){
@@ -47,6 +47,8 @@ selectRecords <- function(list,sel.by="species",fields=NULL,original.data=TRUE,
     }else{
       tab_0[[i]] <- gbifID_sel
     }
+    
+    print(paste0('table_',i))
   }
   
   #rbind all tables without using rbind list. For some weird reason, the command
@@ -87,6 +89,8 @@ selectRecords <- function(list,sel.by="species",fields=NULL,original.data=TRUE,
         field_fieldID <- readRDS(paste0(fields[i],"_",fields[i],"ID"))
         field_fieldID <- field_fieldID[field_fieldID[,paste0(fields[i],"ID")] %in% tab[,paste0(fields[i],"ID")],]  #select rows corresponding to the IDs of objects in the list
         tab <- merge(tab,field_fieldID,by=paste0(fields[i],"ID"),sort=F)
+        
+        print(paste0('field_',i))
       }
     }
   }
