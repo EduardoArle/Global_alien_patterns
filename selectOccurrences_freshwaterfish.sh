@@ -5,7 +5,7 @@
 # slurm arguments
 # ----------------------------------------------------------------------
 
-#SBATCH -J selectOccurrencesMammals
+#SBATCH -J selectOccurrencesFreshWaterFish
 #SBATCH -t 0-72:00:00
 #SBATCH --mem-per-cpu=1000G
 
@@ -26,4 +26,4 @@ module load foss/2018b R/3.5.1-2
 
 # set real index
 
-Rscript --vanilla /gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/Mammals/Scripts/selectOccurrences_mammals.R
+Rscript --vanilla /gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/FreshWaterFish/Scripts/selectOccurrences_freshwaterfish.R

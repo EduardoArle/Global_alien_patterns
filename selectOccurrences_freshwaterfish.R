@@ -1,11 +1,11 @@
 # this script uses a the function selectRecords do retrieve GBIF and related external data 
 # from the relational database in the cluster
 
-wd_list <- "/gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/Mammals"
-wd_out <- "/gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/Mammals"
+wd_list <- "/gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/FreshWaterFish"
+wd_out <- "/gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/FreshWaterFish"
 
 setwd(wd_list)
-list <- read.csv("Final_checklist_mammals_ubiquitous_sps.csv")
+list <- read.csv("Final_checklist_freshwaterfish.csv")
 
 # create a sps_list
 
@@ -111,8 +111,8 @@ selectRecords <- function(list,sel.by="species",fields=NULL,original.data=TRUE,e
   write.csv(tab,paste0(file,".csv"),row.names=FALSE)
 }
 
-selectRecords(list = sps_list, wd.out = wd_out, file="Alien_mammals_GBIF_occurrences",
-              external.fields = "regAntsMammals",
+selectRecords(list = sps_list, wd.out = wd_out, file="Alien_freshwaterfish_GBIF_occurrences",
+              external.fields = "regFreshWaterFish",
               fields = c("location","temporal","basisOfRecord",
                          "establishmentMeans","occurrenceStatus"))
 

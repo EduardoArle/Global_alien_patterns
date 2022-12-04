@@ -5,7 +5,11 @@ library(plotfunctions);library(maptools);library(rworldmap)
 wd_shp <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Mammals/Bentity2_shapefile_fullres"
 wd_table <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Mammals"
 wd_harmo_cl <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Mammals"
-wd_pts_cont <- "C:/Users/ca13kute/Documents/2nd_Chapter/Figures/SI/Points_continent"
+wd_pts_cont <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Figures/SI/Points_continent"
+wd_cont_burden <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Species_burden_continent"
+wd_res_tab <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Results/Mammals/Tables"
+wd_res_maps <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Results/Mammals/Maps"
+wd_map_stuff <- "/Users/carloseduardoaribeiro/Documents/Soup/Map stuff"
 
 #load shp
 shp <- readOGR("Bentity2_shapefile_fullres",dsn = wd_shp,
@@ -255,14 +259,14 @@ table_res <- shp2@data
 table_res2 <- table_res[,c(1,6,4,3,5,7)]
 names(table_res2)[1] <- "Region"
 
-setwd("C:/Users/ca13kute/Documents/2nd_Chapter/Results/Mammals/Tables")
+setwd(wd_res_tab)
 write.csv(table_res2,"Indices_mammals_region.csv",row.names = F)
 
 
 ### plot maps
 
 # Load world map frame and continent outline
-setwd("C:/Users/ca13kute/Documents/sTWIST")
+setwd(wd_map_stuff)
 
 world <- readRDS("wrld.rds")
 worldmapframe <- readRDS("Worldmapframe.rds")
@@ -274,14 +278,20 @@ w_map <- spTransform(w_map,CRS(proj4string(world)))
 #### SOLUTION TO AVOID FIJI AND RUSSIA EAST SCREWING UP THE MAP ####
 
 b <- as(extent(-180, 180, -21, -12.483), 'SpatialPolygons')
-fiji <- crop(shp2[112,],b)
-shp2 <- shp2[-112,]
+fiji <- crop(shp2[which(shp2$BENTITY2_N == 'Fiji'),],b)
+shp2 <- shp2[-which(shp2$BENTITY2_N == 'Fiji'),]
+fiji <- spChFIDs(fiji,'Fiji')
 shp2 <- spRbind(shp2,fiji)
 
 b2 <- as(extent(-179.998, 179.998, 42.2925, 77.148), 'SpatialPolygons')
-rus_east <- crop(shp2[337,],b2)
-shp2 <- shp2[-337,]
+rus_east <- crop(shp2[which(shp2$BENTITY2_N == 'Russia East'),],b2)
+shp2 <- shp2[-which(shp2$BENTITY2_N == 'Russia East'),]
+rus_east <- spChFIDs(rus_east,'Russia East')
 shp2 <- spRbind(shp2,rus_east)
+
+# simplify shapefile to facilitate plotting
+shp3 <- gSimplify(shp2, tol = 0.3, topologyPreserve = T)
+shp3 <- SpatialPolygonsDataFrame(shp3, shp2@data)
 
 # reproject everythign to Eckert
 worldmapframe <- spTransform(worldmapframe,CRS(proj4string(world)))
