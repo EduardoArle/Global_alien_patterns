@@ -9,11 +9,28 @@ table <- read.csv("Alien_ants_GBIF_occurrences.csv")
 #eliminate fossil specimens
 table2 <- table[-which(table$basisOfRecord == "FOSSIL_SPECIMEN"),]
 
+#eliminate absence entries
+table3 <- table2[-which(table2$occurrenceStatus == "ABSENT"),]
+
 #select unique occurrences by location and time
-table3 <- unique(as.data.table(table2),
+table4 <- unique(as.data.table(table3),
                  by=c("locationID","temporalID","speciesID"))
 
 #count observations per species per year per region
-table4 <- ddply(table3,.(species,year,regAntsMammals), nrow)
+table5 <- ddply(table4,.(species,year,regAntsMammals), nrow)
 
-saveRDS(table4,"Ants_occurrence_region_count")
+#save occurrences per region file
+saveRDS(table5,"Ants_occurrence_region_count")
+
+#save table with absence data
+abs <- table2[which(table2$occurrenceStatus == "ABSENT"),]
+
+#select unique absences by location and time
+abs2 <- unique(as.data.table(abs),
+               by=c("locationID","temporalID","speciesID"))
+
+#count observations per species per year per region
+abs3 <- ddply(abs2,.(species,year,regAntsMammals), nrow)
+
+#save absences per region file
+saveRDS(abs3,"Ants_absence_region_count")

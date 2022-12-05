@@ -1,5 +1,5 @@
 library(plyr);library(rgdal);library(raster);library(data.table)
-library(plotfunctions);library(maptools);library(rworldmap)
+library(plotfunctions);library(maptools);library(rworldmap);library(rgeos)
 
 #list WDs
 wd_shp <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Mammals/Bentity2_shapefile_fullres"
@@ -79,6 +79,10 @@ sps_reg_list4 <- unique(as.data.table(sps_reg_list3), #the table has to be in
 
 setwd(wd_harmo_cl)
 write.csv(sps_reg_list3,"Final_checklist_mammals_ubiquitous_sps.csv")
+
+#read final checklist table (harmonised names and no duplicates)
+
+sps_reg_list3 <- read.csv("Final_checklist_mammals_ubiquitous_sps.csv")
 
 #####  GET OCC FROM THE CLUSTER ####
 
@@ -290,7 +294,7 @@ rus_east <- spChFIDs(rus_east,'Russia East')
 shp2 <- spRbind(shp2,rus_east)
 
 # simplify shapefile to facilitate plotting
-shp3 <- gSimplify(shp2, tol = 0.3, topologyPreserve = T)
+shp3 <- gSimplify(shp2, tol = 1, topologyPreserve = T)
 shp3 <- SpatialPolygonsDataFrame(shp3, shp2@data)
 
 # reproject everythign to Eckert
