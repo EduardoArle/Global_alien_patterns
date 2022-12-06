@@ -5,7 +5,7 @@ wd_list <- "/gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/Spide
 wd_out <- "/gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/Spiders"
 
 setwd(wd_list)
-list <- read.csv("Final_checklist_freshwaterfish.csv")
+list <- read.csv("Final_checklist_spiders.csv")
 
 # create a sps_list
 
@@ -77,7 +77,7 @@ selectRecords <- function(list,sel.by="species",fields=NULL,original.data=TRUE,e
       }
       
       #rbind all tables without using rbind list. For some weird reason, the command
-      #in line 72 stops working when the data.table package is loaded...
+      #in line 76 stops working when the data.table package is loaded...
       field <- field_0[[1]]
       for(j in 2:length(field_0))
       {
@@ -111,8 +111,8 @@ selectRecords <- function(list,sel.by="species",fields=NULL,original.data=TRUE,e
   write.csv(tab,paste0(file,".csv"),row.names=FALSE)
 }
 
-selectRecords(list = sps_list, wd.out = wd_out, file="Alien_freshwaterfish_GBIF_occurrences",
-              external.fields = "regFreshWaterFish",
+selectRecords(list = sps_list, wd.out = wd_out, file="Alien_spiders_GBIF_occurrences",
+              external.fields = "regSpiders",
               fields = c("location","temporal","basisOfRecord",
                          "establishmentMeans","occurrenceStatus"))
 

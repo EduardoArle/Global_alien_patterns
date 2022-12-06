@@ -2,13 +2,13 @@ library(plyr);library(rgdal);library(raster);library(data.table)
 library(plotfunctions);library(maptools);library(rworldmap);library(rgeos)
 
 #list WDs
-wd_shp <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Mammals/Bentity2_shapefile_fullres"
-wd_table <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Mammals"
-wd_harmo_cl <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Mammals"
+wd_shp <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Ants/Bentity2_shapefile_fullres"
+wd_table <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Ants"
+wd_harmo_cl <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Ants"
 wd_pts_cont <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Figures/SI/Points_continent"
 wd_cont_burden <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Species_burden_continent"
-wd_res_tab <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Results/Mammals/Tables"
-wd_res_maps <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Results/Mammals/Maps"
+wd_res_tab <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Results/Ants/Tables"
+wd_res_maps <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Results/Ants/Maps"
 wd_map_stuff <- "/Users/carloseduardoaribeiro/Documents/Soup/Map stuff"
 
 #load shp
@@ -18,77 +18,39 @@ shp <- readOGR("Bentity2_shapefile_fullres",dsn = wd_shp,
 #check if all regions listed in the table are represented
 #in the shapefile
 setwd(wd_table)
-sps_reg_list <- read.csv("Final_checklist_mammals.csv") #load table
-regs <- sort(unique(sps_reg_list$Region))
+sps_reg_list <- read.csv("Exotic Species Records.csv") #load table
+regs <- sort(unique(sps_reg_list$bentity2))
 shp_regs <- sort(unique(shp$BENTITY2_N))
 missing <- regs[-which(regs %in% shp_regs)]
 
 missing
+
+#fix missing stuf by changing "Norte de Santander" to "Spain" and 
+#eliminating the two entries of "USA"
+
+missing_1 <- sps_reg_list[which(sps_reg_list$bentity2 == "Norte de Santander"),]
+sps_reg_list$bentity2[which(sps_reg_list$bentity2 == "Norte de Santander")] <-
+  "Spain"
+
+missing_2 <- sps_reg_list[which(sps_reg_list$bentity2 == "USA"),]
+sps_reg_list <- sps_reg_list[-which(sps_reg_list$bentity2 == "USA"),]
+
+#substitute "." for " " in species names
+sps_reg_list$Species <- gsub("\\."," ",sps_reg_list$Species)
 
 #make sps list
 sps_list <- unique(sps_reg_list$Species)
 
 #save sps_list
 setwd(wd_table)
-saveRDS(sps_list,"Sps_list_mammals")
+saveRDS(sps_list,"Sps_list_ants")
 
 
-##### Use taxonomicHarmonisation script
+##### Use taxonomicHarmonisation script and then get occ from cluster
 
-#include the harmonised names into the data base table
+#load table with occurrence counts (calculated by script occRegionAnts)
 setwd(wd_table)
-harmo <- read.csv("Mammalia_aliens_harmonised.csv")
-harmo2 <- harmo[,c(1:2)]
-
-sps_reg_list2 <- merge(sps_reg_list,harmo2,
-                       by.x = "Species",
-                       by.y = "entry")
-
-#create column with species and region info in the mammals table
-sps_reg_list2$sps_reg <- paste0(sps_reg_list2$gbifDarwinCore,"_",
-                                sps_reg_list2$Region)
-
-#include ubiquitous species in the list
-setwd(wd_table)
-ubiq <- read.csv("Ubiquitous mammals Eduardo.csv")
-ubiq2 <- data.frame(Species = ubiq$Species, Region = ubiq$BENTITY2_N)
-
-#include the harmonised names into the data base table (ubiquitous species)
-setwd(wd_table)
-harmo <- read.csv("Mammalia_ubiquitous_aliens_harmonised.csv")
-harmo2 <- harmo[,c(1:2)]
-
-ubiq3 <- merge(ubiq2,harmo2,
-                       by.x = "Species",
-                       by.y = "entry")
-
-#create column with species and region info in the mammals table
-ubiq3$sps_reg <- paste0(ubiq3$gbifDarwinCore,"_",
-                        ubiq3$Region)
-
-#join sps_reg_list to ubiquitous species list
-sps_reg_list3 <- rbind(sps_reg_list2, ubiq3)
-
-#eliminate duplicated rows in the checklists file (probably due to synonyms
-#in the original names that have been resolved)
-
-sps_reg_list4 <- unique(as.data.table(sps_reg_list3), #the table has to be in 
-                        by = c("sps_reg"))            #data.table
-
-#save final checklist table (harmonised names and no duplicates)
-
-setwd(wd_harmo_cl)
-write.csv(sps_reg_list3,"Final_checklist_mammals_ubiquitous_sps.csv")
-
-#read final checklist table (harmonised names and no duplicates)
-
-sps_reg_list3 <- read.csv("Final_checklist_mammals_ubiquitous_sps.csv")
-
-#####  GET OCC FROM THE CLUSTER ####
-
-#load table with occurrence counts (calculated by script occRegionMammals)
-setwd(wd_table)
-sps_reg_count <- readRDS("Mammals_occurrence_region_count")
+sps_reg_count <- readRDS("Ants_occurrence_region_count")
 
 names(sps_reg_count)[4] <- "n" #rename species counting column
 
@@ -96,11 +58,38 @@ names_regs_count <- unique(sps_reg_count$regAntsMammals)
 
 missing <- names_regs_count[-which(names_regs_count %in% shp_regs)]
 
-missing #### EVERYTHING MATCHES!
+missing  #### EVERYTHING MATCHES!
 
 #create column with species and region info in the occurrence count table
 sps_reg_count$sps_reg <- paste0(sps_reg_count$species,"_",
                                 sps_reg_count$regAntsMammals)
+
+##### Use taxonomicHarmonisation script
+
+#include the harmonised names into the data base table
+setwd(wd_table)
+harmo <- read.csv("Ants_aliens_harmonised.csv")
+harmo2 <- harmo[,c(1:2)]
+
+sps_reg_list2 <- merge(sps_reg_list,harmo2,
+                       by.x = "Species",
+                       by.y = "entry")
+
+#create column with species and region info in the ants table
+sps_reg_list2$sps_reg <- paste0(sps_reg_list2$gbifDarwinCore,"_",
+                                sps_reg_list2$bentity2)
+
+
+#eliminate duplicated rows in the checklists file (probably due to synonyms
+#in the original names that have been resolved)
+
+sps_reg_list3 <- unique(as.data.table(sps_reg_list2), #the table has to be in 
+                        by = c("sps_reg"))            #data.table
+
+#save final checklist table (harmonised names and no duplicates)
+
+setwd(wd_table)
+write.csv(sps_reg_list3,"Final_checklist_ants.csv")
 
 #eliminate rows combining sps_reg_count that are not listed in the taxon occurrence table
 sps_reg_count2 <- sps_reg_count[which(sps_reg_count$sps_reg %in% 
@@ -114,9 +103,9 @@ sps_reg_list3$confirmed <- as.numeric(sps_reg_list3$sps_reg %in%
 #calculate the percentage of species per regions confirmed by GBIF and
 #the regional species burden
 
-perc_confirmed <- ddply(sps_reg_list3,.(Region),summarise,
+perc_confirmed <- ddply(sps_reg_list3,.(bentity2),summarise,
                         confirmed=mean(confirmed)*100,
-                        n_sps=length(c(Region)))
+                        n_sps=length(c(bentity2)))
 
 #include the number of species and the percentage of species listed confirmed in 
 #the shapefile
@@ -127,7 +116,7 @@ shp2$n_sps <- rep(9999,nrow(shp2))  #include n_species
 
 for(i in 1:nrow(shp2))
 {
-  a <- which(perc_confirmed$Region == shp2$BENTITY2_N[i])
+  a <- which(perc_confirmed$bentity2 == shp2$BENTITY2_N[i])
   if(length(a) > 0)
   {
     shp2$confirmed[i] <- perc_confirmed$confirmed[a]  
@@ -150,7 +139,8 @@ reg_continent <- reg_continent[,-1]
 
 #merge continent info into sps_reg_list_rep2
 sps_reg_list4 <- merge(sps_reg_list3,reg_continent,
-                       by = "Region")
+                       by.x = "bentity2",
+                       by.y = "Region")
 
 sps_reg_list4$sps_cont <- paste(sps_reg_list4$gbifDarwinCore,
                                 sps_reg_list4$Continent,
@@ -159,7 +149,7 @@ sps_reg_list4$sps_cont <- paste(sps_reg_list4$gbifDarwinCore,
 #save checklist table with continent info to calculate the burden
 setwd(wd_cont_burden)
 
-write.csv(sps_reg_list4,"Mammals_continent.csv",row.names = F)
+write.csv(sps_reg_list4,"Ants_continent.csv",row.names = F)
 
 #merge continent info into sps_reg_count
 names(sps_reg_count)[3] <- "Region"
@@ -170,7 +160,7 @@ sps_reg_count3$sps_cont <- paste(sps_reg_count3$species,
 
 #save count with continent info
 setwd(wd_pts_cont)
-write.csv(sps_reg_count3,"Mammals_continent.csv",row.names = F)
+write.csv(sps_reg_count3,"Ants_continent.csv",row.names = F)
 
 #count sps_continent number of occurrences
 sps_cont_n <- ddply(sps_reg_count3,.(sps_cont),nrow)
@@ -178,13 +168,13 @@ sps_cont_n <- ddply(sps_reg_count3,.(sps_cont),nrow)
 #eliminate rows with less than 50 occurrences
 sps_cont_n2 <- sps_cont_n[which(sps_cont_n$V1 >=50),]
 
-#check which sps_continent combination in the mammals table have at 
+#check which sps_continent combination in the ants table have at 
 #least 50 GBIF occurrence
 sps_reg_list4$modelling <- as.numeric(sps_reg_list4$sps_cont %in% 
                                         sps_cont_n2$sps_cont)
 
 #calculate the percentage of species per regions having at least 50 records
-perc_modelling <- ddply(sps_reg_list4,.(Region),summarise,
+perc_modelling <- ddply(sps_reg_list4,.(bentity2),summarise,
                         perc_modelling = mean(modelling)*100)
 
 
@@ -196,7 +186,7 @@ shp2$continent <- rep(9999,nrow(shp2))  #include continent
 
 for(i in 1:nrow(shp2))
 {
-  a <- which(perc_modelling$Region == shp2$BENTITY2_N[i])
+  a <- which(perc_modelling$bentity2 == shp2$BENTITY2_N[i])
   b <- which(reg_continent$Region == shp2$BENTITY2_N[i])
   
   shp2$continent[i] <- reg_continent$Continent[b]
@@ -221,7 +211,7 @@ sps_reg_count3 <- sps_reg_count3[which(sps_reg_count3$year >= 1970 &
 #create column informing to with lustre the occurrences belong
 sps_reg_count3$lustre <- floor((sps_reg_count3$year - 1970) / 5) + 1
 
-#change col name from "regAntsMammals" to "Region" 
+#change col "regAntsMammals" to "Region"
 names(sps_reg_count3)[3] <- "Region"
 
 #count sps_reg occurrence in the 5 year period
@@ -253,7 +243,7 @@ for(i in 1:nrow(shp2))
     shp2$Rd[i] <- tab_rd_n$Rd[a]  
   }else{
     shp2$Rd[i] <- ifelse(shp2$BENTITY2_N[i] %in% 
-                           sps_reg_list4$Region,0,NA)
+                           sps_reg_list4$bentity2,0,NA)
   }
 }
 
@@ -264,7 +254,7 @@ table_res2 <- table_res[,c(1,6,4,3,5,7)]
 names(table_res2)[1] <- "Region"
 
 setwd(wd_res_tab)
-write.csv(table_res2,"Indices_mammals_region.csv",row.names = F)
+write.csv(table_res2, "Indices_ants_region.csv", row.names = F)
 
 
 ### plot maps
@@ -451,3 +441,4 @@ myGradientLegend(valRange = c(0, 100),
                  cex = 3)
 
 ## save 2000 width
+

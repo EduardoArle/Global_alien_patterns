@@ -82,6 +82,57 @@ setwd("/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Mammals
 write.csv(reg_cont,"Lookup_table_region_cont.csv")
 
 
+############## Freshwaterfish ##########################
+
+
+#list WDs
+wd_shp <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Fresh Water Fish/Simplified_FreshWater_shp"
+wd_IPBES <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/IPBES/Simplified_shp"
+
+#load shps
+shp_fresh <- readOGR("Basin042017_3119",dsn = wd_shp,
+                     use_iconv=TRUE, encoding="UTF-8")
+
+shp_IPBES <- readOGR("IPBES_SubRegion",dsn = wd_IPBES)
+
+#loop though shapefile features to identify each of their continents
+
+pts_regs <- list()
+for(i in 1:nrow(shp_fresh))
+{
+  pts_regs[[i]] <- spsample(shp_fresh[i,], n=100, type='regular') #seed points in each region
+  print(i)
+}
+
+#get continent of each region
+
+continents <- character()
+for(i in 3081:nrow(shp_fresh))
+{
+  a <- over(pts_regs[[i]],shp_IPBES)
+  b <- table(a$Region)
+  c <- which.max(b)
+  d <- names(c)
+  continents[i] <- d
+  print(i)
+}
+
+#join info
+reg_cont <- data.frame(BasinName = shp_fresh$BasinName,Continent = continents)
+
+#manually fix regions that have not been asigned to a continent
+missing_cont <- reg_cont[which(is.na(reg_cont$Continent)),]
+
+missing_cont
+
+reg_cont[which(is.na(reg_cont$Continent)),]$Continent <- 'Africa'
+
+#save lookup table 
+setwd("/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Fresh Water Fish")
+write.csv(reg_cont,"Lookup_table_region_cont.csv")
+
+
+
 ############################### DONE UP TO HERE ##################################
 
 ############## Amphibians and Reptiles ##########################
@@ -395,56 +446,6 @@ missing_cont2
 
 #save lookup tabe 
 setwd("C:/Users/ca13kute/Documents/2nd_Chapter/Amphibians and Reptiles")
-write.csv(reg_cont,"Lookup_table_region_cont.csv")
-
-
-
-
-############## Freshwater ##########################
-
-
-#list WDs
-wd_shp <- "C:/Users/ca13kute/Documents/2nd_Chapter/Freshwater/Simplified_FreshWater_shp"
-wd_IPBES <- "C:/Users/ca13kute/Documents/2nd_Chapter/IPBES/Simplified_shp"
-
-#load shps
-shp_fresh <- readOGR("Basin042017_3119",dsn = wd_shp,
-                    use_iconv=TRUE, encoding="UTF-8")
-
-shp_IPBES <- readOGR("IPBES_SubRegion",dsn = wd_IPBES)
-
-#loop though shapefile features to identify each of their continents
-
-pts_regs <- list()
-for(i in 1:nrow(shp_fresh))
-{
-  pts_regs[[i]] <- spsample(shp_fresh[i,], n=100, type='regular') #seed points in each region
-  print(i)
-}
-
-#get continent of each region
-
-continents <- character()
-for(i in 3081:nrow(shp_fresh))
-{
-  a <- over(pts_regs[[i]],shp_IPBES)
-  b <- table(a$Region)
-  c <- which.max(b)
-  d <- names(c)
-  continents[i] <- d
-  print(i)
-}
-
-#join info
-reg_cont <- data.frame(BasinName = shp_fresh$BasinName,Continent = continents)
-
-#manually fix regions that have not been asigned to a continent
-missing_cont <- reg_cont[which(is.na(reg_cont$Continent)),]
-
-missing_cont
-
-#save lookup tabe 
-setwd("C:/Users/ca13kute/Documents/2nd_Chapter/Freshwater")
 write.csv(reg_cont,"Lookup_table_region_cont.csv")
 
 
