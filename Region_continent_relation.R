@@ -132,6 +132,64 @@ setwd("/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Fresh W
 write.csv(reg_cont,"Lookup_table_region_cont.csv")
 
 
+############## Spiders ##########################
+
+
+#list WDs
+wd_shp <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Spiders/Spiders_shapefile"
+wd_IPBES <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/IPBES/Simplified_shp"
+
+#load shps
+shp_spiders <- readOGR("Shapefile_spiders",dsn = wd_shp,
+                       use_iconv=TRUE, encoding="UTF-8")
+
+shp_IPBES <- readOGR("IPBES_SubRegion",dsn = wd_IPBES)
+
+#loop though shapefile features to identify each of their continents
+
+pts_regs <- list()
+for(i in 1:nrow(shp_spiders))
+{
+  pts_regs[[i]] <- spsample(shp_spiders[i,], n=100, type='regular') #seed points in each region
+  print(i)
+}
+
+#get continent of each region
+
+continents <- character()
+
+for(i in 189:nrow(shp_spiders))
+{
+  a <- over(pts_regs[[i]],shp_IPBES)
+  b <- table(a$Region)
+  c <- which.max(b)
+  d <- names(c)
+  continents[i] <- d
+  print(i)
+}
+
+### manually fix what does not work
+
+shp_spiders[i,]$SpdrRgn
+plot(world)
+plot(pts_regs[[i]],add=T,pch=19,col="blue")
+
+
+#i=188 Marion-Prince Edward Is.
+continents[i] <- "Oceania"
+
+#join info
+reg_cont <- data.frame(Region = shp_spiders$SpdrRgn,
+                       Continent = continents)
+
+#manually fix regions that have not been asigned to a continent
+missing_cont <- reg_cont[which(is.na(reg_cont$Continent)),]
+
+missing_cont
+
+#save lookup tabe 
+setwd("/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Spiders")
+write.csv(reg_cont,"Lookup_table_region_cont.csv")
 
 ############################### DONE UP TO HERE ##################################
 
@@ -853,69 +911,6 @@ missing_cont
 #save lookup tabe 
 setwd("C:/Users/ca13kute/Documents/2nd_Chapter/GAVIA")
 write.csv(reg_cont,"Lookup_table_region_cont.csv")
-
-
-
-
-############## Spiders ##########################
-
-
-#list WDs
-wd_shp <-  "C:/Users/ca13kute/Documents/2nd_Chapter/Spiders/Shapefile"
-wd_IPBES <- "C:/Users/ca13kute/Documents/2nd_Chapter/IPBES/Simplified_shp"
-
-#load shps
-shp_spiders <- readOGR("Shapefile_spiders",dsn = wd_shp,
-                     use_iconv=TRUE, encoding="UTF-8")
-
-shp_IPBES <- readOGR("IPBES_SubRegion",dsn = wd_IPBES)
-
-#loop though shapefile features to identify each of their continents
-
-pts_regs <- list()
-for(i in 1:nrow(shp_spiders))
-{
-  pts_regs[[i]] <- spsample(shp_spiders[i,], n=100, type='regular') #seed points in each region
-  print(i)
-}
-
-#get continent of each region
-
-continents <- character()
-
-for(i in 189:nrow(shp_spiders))
-{
-  a <- over(pts_regs[[i]],shp_IPBES)
-  b <- table(a$Region)
-  c <- which.max(b)
-  d <- names(c)
-  continents[i] <- d
-  print(i)
-}
-
-### manually fix what does not work
-
-shp_spiders[i,]$SpdrRgn
-plot(world)
-plot(pts_regs[[i]],add=T,pch=19,col="blue")
-
-
-#i=188 Marion-Prince Edward Is.
-continents[i] <- "Oceania"
-
-#join info
-reg_cont <- data.frame(Region = shp_spiders$SpdrRgn,
-                       Continent = continents)
-
-#manually fix regions that have not been asigned to a continent
-missing_cont <- reg_cont[which(is.na(reg_cont$Continent)),]
-
-missing_cont
-
-#save lookup tabe 
-setwd("C:/Users/ca13kute/Documents/2nd_Chapter/Spiders")
-write.csv(reg_cont,"Lookup_table_region_cont.csv")
-
 
 
 ############## Fungi ##########################

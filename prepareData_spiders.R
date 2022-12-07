@@ -1,115 +1,104 @@
 library(plyr);library(rgdal);library(raster);library(data.table)
-library(plotfunctions);library(maptools);library(rworldmap)
+library(plotfunctions);library(maptools);library(rworldmap);library(rgeos)
 
 #list WDs
-wd_shp <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Fresh Water Fish/Simplified_FreshWater_shp"
-wd_table <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Fresh Water Fish"
+wd_shp <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Spiders/Spiders_shapefile"
+wd_table <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Spiders"
 wd_pts_cont <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Figures/SI/Points_continent"
 wd_cont_burden <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Species_burden_continent"
-wd_res_tab <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Results/FreshWaterFish/Tables"
+wd_res_tab <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Results/Spiders/Tables"
 wd_map_stuff <- "/Users/carloseduardoaribeiro/Documents/Soup/Map stuff"
 
 #load shp
-shp <- readOGR("Basin042017_3119",dsn = wd_shp,
+shp <- readOGR("Shapefile_spiders",dsn = wd_shp,
                use_iconv=TRUE, encoding="UTF-8")
 
-#check if all regions listed in the table are represented
-#in the shapefile
+#check if all regions listed in the table are represented in the shapefile
 setwd(wd_table)
-sps_reg_list <- read.csv2("Occurrence_Table.csv") #load table
-regs <- sort(unique(sps_reg_list$X1.Basin.Name))
-shp_regs <- sort(unique(shp$BasinName))
+sps_reg_list <- read.csv("Table2.csv") #load table
+
+#select only the rows for which region could be resolved
+sps_reg_list2 <- sps_reg_list[which(!is.na(sps_reg_list$SpiderRegion)),]
+
+#check if all regions in the table are represented in the shp
+regs <- sort(unique(sps_reg_list2$SpiderRegion))
+shp_regs <- sort(unique(shp$SpdrRgn))
 missing <- regs[-which(regs %in% shp_regs)]
 
 missing
 
-#prepare sps list
+#create a column in the species table with binomial name
+sps_reg_list2$Binomial <- paste0(gsub(" ","",sps_reg_list2$genus),
+                                 " ",
+                                gsub(" ","",sps_reg_list2$species))
 
-#change col names
-names(sps_reg_list) <- gsub("^X[0-9].","\\1",names(sps_reg_list))
-
-#eliminate questinable records
-sps_reg_list2 <- sps_reg_list[which(sps_reg_list$Occurrence.Status == 
-                                      "valid"),]
-
-#eliminate native records
-sps_reg_list3 <- sps_reg_list2[which(sps_reg_list2$Native.Exotic.Status == 
-                                       "exotic"),]
-
-
-#substitute "." for " " in species names
-sps_reg_list3$Fishbase.Valid.Species.Name <- gsub("\\."," ",
-                                                  sps_reg_list3$Fishbase.Valid.Species.Name)
-
-#make sps list
-sps_list <- unique(sps_reg_list3$Fishbase.Valid.Species.Name)
+#make a sps list
+sps_list <- unique(sps_reg_list2$Binomial)
 
 #save sps_list
 setwd(wd_table)
-saveRDS(sps_list,"Sps_list_freshwaterfish")
+saveRDS(sps_list,"Sps_list_spiders")
 
+##### Use taxonomicHarmonisation script and then get occ from cluster
 
-##### Use taxonomicHarmonisation script
-
-#load table with occurrence counts (calculated by script occRegionFreshwater)
+#load table with occurrence counts (calculated by script occRegionSpiders)
 setwd(wd_table)
-sps_reg_count <- readRDS("Freshwaterfish_occurrence_region_count")
+sps_reg_count <- readRDS("Spiders_occurrence_region_count")
 
 names(sps_reg_count)[4] <- "n" #rename species counting column
 
-names_regs_count <- unique(sps_reg_count$regFreshWaterFish)
+names_regs_count <- unique(sps_reg_count$Region)
 
 missing <- names_regs_count[-which(names_regs_count %in% shp_regs)]
 
-missing #### EVERYTHING MATCHES!
+missing
 
 #create column with species and region info in the occurrence count table
 sps_reg_count$sps_reg <- paste0(sps_reg_count$species,"_",
-                                sps_reg_count$regFreshWaterFish)
+                                sps_reg_count$regSpiders)
 
 #include the harmonised names into the data base table
 setwd(wd_table)
-harmo <- read.csv("Freshwater_aliens_harmonised.csv")
+harmo <- read.csv("Spiders_aliens_harmonised.csv")
 harmo2 <- harmo[,c(1:2)]
 
-sps_reg_list4 <- merge(sps_reg_list3,harmo2,
-                       by.x = "Fishbase.Valid.Species.Name",
+sps_reg_list3 <- merge(sps_reg_list2,harmo2,
+                       by.x = "Binomial",
                        by.y = "entry")
 
-#create column with species and region info in the freshwater table
-sps_reg_list4$sps_reg <- paste0(sps_reg_list4$gbifDarwinCore,"_",
-                                   sps_reg_list4$Basin.Name)
-
+#create column with species and region info in the ants table
+sps_reg_list3$sps_reg <- paste0(sps_reg_list3$gbifDarwinCore,"_",
+                                sps_reg_list3$SpiderRegion)
 
 #eliminate duplicated rows in the checklists file (probably due to synonyms
 #in the original names that have been resolved)
 
-sps_reg_list5 <- unique(as.data.table(sps_reg_list4), #the table has to be in 
-                            by = c("sps_reg"))            #data.table
+sps_reg_list4 <- unique(as.data.table(sps_reg_list3), #the table has to be in 
+                        by = c("sps_reg"))            #data.table
 
 #save final checklist table (harmonised names and no duplicates)
 
 setwd(wd_table)
-write.csv(sps_reg_list5,"Final_checklist_freshwaterfish.csv")
+write.csv(sps_reg_list4,"Final_checklist_spiders.csv")
 
 #read final checklist 
-sps_reg_list5 <- read.csv("Final_checklist_freshwaterfish.csv")
+sps_reg_list4 <- read.csv("Final_checklist_spiders.csv")
 
 #eliminate rows combining sps_reg_count that are not listed in the taxon occurrence table
 sps_reg_count2 <- sps_reg_count[which(sps_reg_count$sps_reg %in% 
-                                        sps_reg_list5$sps_reg),]
+                                        sps_reg_list4$sps_reg),]
 
 #check which sps_region combination in the taxon table have at least 1 GBIF 
 #occurrence
-sps_reg_list5$confirmed <- as.numeric(sps_reg_list5$sps_reg %in% 
-                                            sps_reg_count2$sps_reg)
+sps_reg_list4$confirmed <- as.numeric(sps_reg_list4$sps_reg %in% 
+                                        sps_reg_count2$sps_reg)
 
 #calculate the percentage of species per regions confirmed by GBIF and
 #the regional species burden
-
-perc_confirmed <- ddply(sps_reg_list5,.(Basin.Name),summarise,
+perc_confirmed <- ddply(sps_reg_list4,.(SpiderRegion),summarise,
                         confirmed=mean(confirmed)*100,
-                        n_sps=length(c(Basin.Name)))
+                        n_sps=length(c(SpiderRegion)))
+
 
 #include the number of species and the percentage of species listed confirmed in 
 #the shapefile
@@ -120,7 +109,7 @@ shp2$n_sps <- rep(9999,nrow(shp2))  #include n_species
 
 for(i in 1:nrow(shp2))
 {
-  a <- which(perc_confirmed$Basin.Name == shp2$BasinName[i])
+  a <- which(perc_confirmed$SpiderRegion == shp2$SpdrRgn[i])
   if(length(a) > 0)
   {
     shp2$confirmed[i] <- perc_confirmed$confirmed[a]  
@@ -140,22 +129,20 @@ setwd(wd_table)
 reg_continent <- read.csv("Lookup_table_region_cont.csv")
 
 reg_continent <- reg_continent[,-1]
-names(reg_continent)[2] <- "Continent"
-names(reg_continent)[1] <- "Region"
 
 #merge continent info into sps_reg_list_rep2
-sps_reg_list6 <- merge(sps_reg_list5,reg_continent,
-                       by.x = "Basin.Name",
+sps_reg_list5 <- merge(sps_reg_list4,reg_continent,
+                       by.x = "SpiderRegion",
                        by.y = "Region")
 
-sps_reg_list6$sps_cont <- paste(sps_reg_list6$gbifDarwinCore,
-                                    sps_reg_list6$Continent,
-                                    sep="_")
+sps_reg_list5$sps_cont <- paste(sps_reg_list5$gbifDarwinCore,
+                                sps_reg_list5$Continent,
+                                sep="_")
 
 #save checklist table with continent info to calculate the burder
 setwd(wd_cont_burden)
 
-write.csv(sps_reg_list6,"Freshwaterfish_continent.csv",row.names = F)
+write.csv(sps_reg_list5,"Spiders_continent.csv",row.names = F)
 
 
 #merge continent info into sps_reg_count
@@ -167,7 +154,7 @@ sps_reg_count3$sps_cont <- paste(sps_reg_count3$species,
 
 #save count with continent info
 setwd(wd_pts_cont)
-write.csv(sps_reg_count3,"Freshwaterfish_continent.csv",row.names = F)
+write.csv(sps_reg_count3,"Spiders_continent.csv",row.names = F)
 
 #count sps_continent number of occurrences
 sps_cont_n <- ddply(sps_reg_count3,.(sps_cont),nrow)
@@ -175,13 +162,13 @@ sps_cont_n <- ddply(sps_reg_count3,.(sps_cont),nrow)
 #eliminate rows with less than 50 occurrences
 sps_cont_n2 <- sps_cont_n[which(sps_cont_n$V1 >=50),]
 
-#check which sps_continent combination in the amphibian table have at 
+#check which sps_continent combination in the ants table have at 
 #least 50 GBIF occurrence
-sps_reg_list6$modelling <- as.numeric(sps_reg_list6$sps_cont %in% 
-                                            sps_cont_n2$sps_cont)
+sps_reg_list5$modelling <- as.numeric(sps_reg_list5$sps_cont %in% 
+                                        sps_cont_n2$sps_cont)
 
 #calculate the percentage of species per regions having at least 50 records
-perc_modelling <- ddply(sps_reg_list6,.(Basin.Name),summarise,
+perc_modelling <- ddply(sps_reg_list5,.(SpiderRegion),summarise,
                         perc_modelling = mean(modelling)*100)
 
 
@@ -193,8 +180,8 @@ shp2$continent <- rep(9999,nrow(shp2))  #include continent
 
 for(i in 1:nrow(shp2))
 {
-  a <- which(perc_modelling$Basin.Name == shp2$BasinName[i])
-  b <- which(reg_continent$Region == shp2$BasinName[i])
+  a <- which(perc_modelling$SpiderRegion == shp2$SpdrRgn[i])
+  b <- which(reg_continent$Region == shp2$SpdrRgn[i])
   
   shp2$continent[i] <- reg_continent$Continent[b]
   
@@ -205,7 +192,6 @@ for(i in 1:nrow(shp2))
     shp2$modelling[i] <- NA 
   }
 }
-
 
 ###### calculate range dynamics evidence
 
@@ -218,22 +204,19 @@ sps_reg_count3 <- sps_reg_count3[which(sps_reg_count3$year >= 1970 &
 #create column informing to with lustre the occurrences belong
 sps_reg_count3$lustre <- floor((sps_reg_count3$year - 1970) / 5) + 1
 
-#change col name from "" to "Region" 
-names(sps_reg_count3)[3] <- "Region"
-
 #count sps_reg occurrence in the 5 year period
-sps_reg_count4 <- ddply(sps_reg_count3,.(species,Region,sps_reg,lustre),
+sps_reg_count4 <- ddply(sps_reg_count3,.(species,regSpiders,sps_reg,lustre),
                         summarise, n_5y = sum(n))
 
 #eliminate rows with combination sps_reg_n_5y < 10
 sps_reg_count5 <- sps_reg_count4[-which(sps_reg_count4$n_5y < 10),]
 
 #count how many periods of five years per region have at least 10 rec
-sps_reg_count6 <- ddply(sps_reg_count5,.(Region),nrow)
+sps_reg_count6 <- ddply(sps_reg_count5,.(regSpiders),nrow)
 
 #merge sps number per region to range dynamics value
 tab_rd_n <- merge(sps_reg_count6,shp2@data,
-                  by.x = "Region", by.y = "BasinName")
+                  by.x = "regSpiders", by.y = "SpdrRgn")
 
 #calculate Rd
 tab_rd_n$Rd <- tab_rd_n$V1/tab_rd_n$n_sps*10
@@ -244,24 +227,24 @@ shp2$Rd <- rep(9999,nrow(shp2))  #include percentage of confirmed sps
 
 for(i in 1:nrow(shp2))
 {
-  a <- which(tab_rd_n$Region == shp2$BasinName[i])
+  a <- which(tab_rd_n$regSpiders == shp2$SpdrRgn[i])
   if(length(a) == 1)
   {
     shp2$Rd[i] <- tab_rd_n$Rd[a]  
   }else{
-    shp2$Rd[i] <- ifelse(shp2$BasinName[i] %in% 
-                           sps_reg_list6$Basin.Name,0,NA)
+    shp2$Rd[i] <- ifelse(shp2$SpdrRgn[i] %in% 
+                           sps_reg_list5$SpiderRegion,0,NA)
   }
 }
 
 #save tables
 
 table_res <- shp2@data
-table_res2 <- table_res[,c(1,13,11,10,12,14)]
+table_res2 <- table_res[,c(1,5,3,2,4,6)]
 names(table_res2)[1] <- "Region"
 
 setwd(wd_res_tab)
-write.csv(table_res2,"Indices_freshwaterfish_region.csv",row.names = F)
+write.csv(table_res2,"Indices_spiders_region.csv",row.names = F)
 
 
 ### plot maps
@@ -276,10 +259,13 @@ worldmapframe <- readRDS("Worldmapframe.rds")
 w_map <- getMap(resolution = "coarse")
 w_map <- spTransform(w_map,CRS(proj4string(world)))
 
+# simplify shapefile to facilitate plotting
+shp3 <- gSimplify(shp2, tol = 0.1, topologyPreserve = T)
+shp3 <- SpatialPolygonsDataFrame(shp3, shp2@data)
+
 # reproject everythign to Eckert
 worldmapframe <- spTransform(worldmapframe,CRS(proj4string(world)))
-shp3 <- spTransform(shp2,CRS(proj4string(world)))
-
+shp3 <- spTransform(shp3,CRS(proj4string(world)))
 
 
 ##### PLOT THE SPECIES BURDEN MAP
@@ -431,4 +417,3 @@ myGradientLegend(valRange = c(0, 100),
                  cex = 3)
 
 ## save 2000 width
-
