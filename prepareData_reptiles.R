@@ -35,40 +35,40 @@ saveRDS(sps_list,"Sps_list_rep")
 
 #load table with occurrence counts (calculated by script occRegionReptiles)
 setwd(wd_table)
-sps_reg_count <- readRDS("Reptilia_occurrence_region_count")
+sps_reg_count <- readRDS("Reptiles_occurrence_region_count")
 
 names(sps_reg_count)[4] <- "n" #rename species counting column
 
-names_regs_count <- unique(sps_reg_count$BENTITY2_N)
+names_regs_count <- unique(sps_reg_count$regAmphibiansReptiles)
 
 missing <- names_regs_count[-which(names_regs_count %in% shp_regs)]
 
 missing
 
-#encoding problem, fix manually
+#encoding problem, fixed manually
 
-sps_reg_count$BENTITY2_N <- as.character(sps_reg_count$BENTITY2_N)
-
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N == "San Luis PotosÃ" )] <- "San Luis Potosí"
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "MÃ©xico State" )] <- "México State"
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "MichoacÃ¡n" )] <- "Michoacán"
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "MÃ©xico Distrito Federal" )] <- "México Distrito Federal"
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "Nuevo LeÃ³n" )] <- "Nuevo León"
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "QuerÃ©taro" )] <- "Querétaro"
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "St.Martin-St.BarthÃ©lÃ©my" )] <- "St.Martin-St.Barthélémy" 
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "Guadalupe I." )] <- "Guadeloupe"
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "YucatÃ¡n" )] <- "Yucatán"
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "CÃ³rdoba" )] <- "Córdoba"
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "Entre RÃos" )] <- "Entre Ríos"
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "Santa FÃ©" )] <- "Santa Fé"
-sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "TucumÃ¡n" )] <- "Tucumán"
+# sps_reg_count$BENTITY2_N <- as.character(sps_reg_count$BENTITY2_N)
+# 
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N == "San Luis PotosÃ" )] <- "San Luis Potosí"
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "MÃ©xico State" )] <- "México State"
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "MichoacÃ¡n" )] <- "Michoacán"
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "MÃ©xico Distrito Federal" )] <- "México Distrito Federal"
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "Nuevo LeÃ³n" )] <- "Nuevo León"
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "QuerÃ©taro" )] <- "Querétaro"
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "St.Martin-St.BarthÃ©lÃ©my" )] <- "St.Martin-St.Barthélémy" 
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "Guadalupe I." )] <- "Guadeloupe"
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "YucatÃ¡n" )] <- "Yucatán"
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "CÃ³rdoba" )] <- "Córdoba"
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "Entre RÃos" )] <- "Entre Ríos"
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "Santa FÃ©" )] <- "Santa Fé"
+# sps_reg_count$BENTITY2_N[which(sps_reg_count$BENTITY2_N ==  "TucumÃ¡n" )] <- "Tucumán"
 
 #create column with species and region info in the occurrence count table
 sps_reg_count$sps_reg <- paste0(sps_reg_count$species,"_",
-                                sps_reg_count$BENTITY2_N)
+                                sps_reg_count$regAmphibiansReptiles)
 
 #include the harmonised names into the data base table
-setwd(wd_rep)
+setwd(wd_table)
 harmo <- read.csv("Reptilia_aliens_harmonised.csv")
 harmo2 <- harmo[,c(1:2)]
 
@@ -89,22 +89,20 @@ sps_reg_list_rep2 <- unique(as.data.table(sps_reg_list_rep), #the table has to b
 
 #save final checklist table (harmonised names and no duplicates)
 
-setwd(wd_harmo_cl)
+setwd(wd_table)
 write.csv(sps_reg_list_rep2,"Final_checklist_reptiles.csv")
 
 #eliminate rows combining sps_reg_count that are not listed in the reptile table
 sps_reg_count2 <- sps_reg_count[which(sps_reg_count$sps_reg %in% 
-                                        sps_reg_list_rep$sps_reg),]
+                                        sps_reg_list_rep2$sps_reg),]
 
 #check which sps_region combination in the reptile table have at least 1 GBIF 
 #occurrence
 sps_reg_list_rep2$confirmed <- as.numeric(sps_reg_list_rep2$sps_reg %in% 
                                         sps_reg_count2$sps_reg)
 
-
 #calculate the percentage of species per regions confirmed by GBIF and
 #the regional species burden
-
 perc_confirmed <- ddply(sps_reg_list_rep2,.(Region),summarise,
                         confirmed=mean(confirmed)*100,
                         n_sps=length(c(Region)))
@@ -254,13 +252,13 @@ table_res <- shp2@data
 table_res2 <- table_res[,c(1,6,4,3,5,7)]
 names(table_res2)[1] <- "Region"
 
-setwd("C:/Users/ca13kute/Documents/2nd_Chapter/Results/Reptiles/Tables")
+setwd(wd_res_tab)
 write.csv(table_res2,"Indices_reptiles_region.csv",row.names = F)
 
 ### plot maps
 
 # Load world map frame and continent outline
-setwd("C:/Users/ca13kute/Documents/sTWIST")
+setwd(wd_map_stuff)
 
 world <- readRDS("wrld.rds")
 worldmapframe <- readRDS("Worldmapframe.rds")
@@ -272,12 +270,13 @@ w_map <- spTransform(w_map,CRS(proj4string(world)))
 #### SOLUTION TO AVOID FIJI SCREWING UP THE MAP ####
 b <- as(extent(-180, 180, -21, -12.483), 'SpatialPolygons')
 fiji <- crop(shp2[91,],b)
-shp2 <- shp2[-91,]
-shp2 <-spRbind(shp2,fiji)
+fiji <- spChFIDs(fiji,'Fiji')
+shp3 <- shp2[-91,]
+shp3 <-spRbind(shp3,fiji)
 
 # reproject everythign to Eckert
 worldmapframe <- spTransform(worldmapframe,CRS(proj4string(world)))
-shp3 <- spTransform(shp2,CRS(proj4string(world)))
+shp3 <- spTransform(shp3,CRS(proj4string(world)))
 
 
 
@@ -307,7 +306,7 @@ col_leg <- colorRampPalette(c("white", rgb(135,0,0,
 
 # could not plot values the way I want (log) adapt the function
 myGradientLegend(valRange = c(0, max(shp3$n_sps)), 
-                 pos=c(0.3,0,0.7,.015),
+                 pos=c(0.2,0.13,0.8,.145),
                  color = col_leg(20), 
                  side = 1,
                  n.seg = c(0,max(shp3$n_sps)/4,max(shp3$n_sps)/2,
@@ -316,7 +315,9 @@ myGradientLegend(valRange = c(0, max(shp3$n_sps)),
                             paste(round(exp(log(max(shp3$n_sps))/2))),
                             paste(round(exp(log(max(shp3$n_sps))*3/4))),
                             paste(max(shp3$n_sps))),
-                 cex = 1.5)
+                 cex = 3)
+
+#save width 2000
 
 ##### PLOT THE CONFIRMED MAP
 
@@ -346,13 +347,14 @@ col_leg <- colorRampPalette(c("white", rgb(40,40,148,
                                            maxColorValue = 255)))
 
 myGradientLegend(valRange = c(0, 100),
-                 pos=c(0.3,0,0.7,.015),
+                 pos = c(0.2,0.13,0.8,.145),
                  color = col_leg(20),
                  side = 1,
                  n.seg = 0,
                  values = c("0","100%"),
-                 cex = 1.5)
+                 cex = 3)
 
+#save width 2000
 
 ##### PLOT THE MODELLING MAP
 
@@ -382,13 +384,14 @@ col_leg <- colorRampPalette(c("white", rgb(191,144,0,
                                            maxColorValue = 255)))
 
 myGradientLegend(valRange = c(0, 100),
-                 pos=c(0.3,0,0.7,.015),
+                 pos = c(0.2,0.13,0.8,.145),
                  color = col_leg(20),
                  side = 1,
                  n.seg = 0,
                  values = c("0","100%"),
-                 cex = 1.5)
+                 cex = 3)
 
+#save width 2000
 
 ##### PLOT THE RANGE DYNAMICS MAP
 
@@ -418,9 +421,11 @@ col_leg <- colorRampPalette(c("white", rgb(56,87,35,
                                            maxColorValue = 255)))
 
 myGradientLegend(valRange = c(0, 100),
-                 pos=c(0.3,0,0.7,.015),
+                 pos = c(0.2,0.13,0.8,.145),
                  color = col_leg(20),
                  side = 1,
                  n.seg = 0,
                  values = c("0","100%"),
-                 cex = 1.5)
+                 cex = 3)
+
+## save 2000 width

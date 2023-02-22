@@ -191,18 +191,16 @@ missing_cont
 setwd("/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Spiders")
 write.csv(reg_cont,"Lookup_table_region_cont.csv")
 
-############################### DONE UP TO HERE ##################################
 
 ############## Amphibians and Reptiles ##########################
 
-
 #list WDs
-wd_shp <- "C:/Users/ca13kute/Documents/2nd_Chapter/Amphibians and Reptiles/Regions_shapefile"
-wd_IPBES <- "C:/Users/ca13kute/Documents/2nd_Chapter/IPBES/Simplified_shp"
+wd_shp <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Reptiles/Regions_shapefile"
+wd_IPBES <- "/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/IPBES/Simplified_shp"
 
 #load shps
 shp_amph <- readOGR("Regions_reptiles_amphibians",dsn = wd_shp,
-               use_iconv=TRUE, encoding="UTF-8")
+                    use_iconv=TRUE, encoding="UTF-8")
 
 shp_IPBES <- readOGR("IPBES_SubRegion",dsn = wd_IPBES)
 
@@ -503,8 +501,16 @@ missing_cont2
 
 
 #save lookup tabe 
-setwd("C:/Users/ca13kute/Documents/2nd_Chapter/Amphibians and Reptiles")
+setwd("/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Amphibians")
 write.csv(reg_cont,"Lookup_table_region_cont.csv")
+
+setwd("/Users/carloseduardoaribeiro/Documents/Global Alien Patterns/Data/Reptiles")
+write.csv(reg_cont,"Lookup_table_region_cont.csv")
+
+
+############################### DONE UP TO HERE ##################################
+
+
 
 
 

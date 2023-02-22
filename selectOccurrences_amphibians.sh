@@ -26,4 +26,4 @@ module load foss/2018b R/3.5.1-2
 
 # set real index
 
-Rscript --vanilla /gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/Reptiles/Scripts/selectOccurrences_reptiles.R
+Rscript --vanilla /gpfs1/data/idiv_meyer/01_projects/eduardo/GlobalAlienPatterns/Amphibians/Scripts/selectOccurrences_amphibians.R
